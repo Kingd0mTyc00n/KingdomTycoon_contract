@@ -30,9 +30,7 @@ const config: HardhatUserConfig = {
       url: "https://evm-rpc-testnet.sei-apis.com",
       accounts: process.env.SEI_PRIVATE_KEY ? [process.env.SEI_PRIVATE_KEY] : [],
       chainId: 1328,
-      gas: 2100000,
-      gasPrice: 20000000000,
-      gasMultiplier: 2
+      gasPrice: 100000000000000,
     },
   },
  

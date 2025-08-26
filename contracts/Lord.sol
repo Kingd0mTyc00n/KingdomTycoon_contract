@@ -48,6 +48,131 @@ contract Lord is ERC1155, Ownable, ERC1155Pausable, ERC1155Burnable, ERC1155Supp
     }
 
     /**
+     * @dev Get all NFT IDs that a user owns (with their balances)
+     * @param user The address to query
+     * @return ownedIds Array of NFT IDs the user owns
+     * @return balances Array of balances for each NFT ID
+     */
+    function getUserNFTs(address user) 
+        public 
+        view 
+        returns (uint256[] memory ownedIds, uint256[] memory balances) 
+    {
+        require(user != address(0), "Cannot query zero address");
+        
+        // First, count how many different NFTs the user owns
+        uint256 ownedCount = 0;
+        for (uint256 i = MIN_CHARACTER_ID; i <= MAX_CHARACTER_ID; i++) {
+            if (balanceOf(user, i) > 0) {
+                ownedCount++;
+            }
+        }
+        
+        // Create arrays with the exact size needed
+        ownedIds = new uint256[](ownedCount);
+        balances = new uint256[](ownedCount);
+        
+        // Fill the arrays with owned NFT IDs and their balances
+        uint256 index = 0;
+        for (uint256 i = MIN_CHARACTER_ID; i <= MAX_CHARACTER_ID; i++) {
+            uint256 balance = balanceOf(user, i);
+            if (balance > 0) {
+                ownedIds[index] = i;
+                balances[index] = balance;
+                index++;
+            }
+        }
+        
+        return (ownedIds, balances);
+    }
+
+    /**
+     * @dev Get only the NFT IDs that a user owns (without balances)
+     * @param user The address to query
+     * @return ownedIds Array of NFT IDs the user owns
+     */
+    function getUserNFTIds(address user) 
+        public 
+        view 
+        returns (uint256[] memory ownedIds) 
+    {
+        (ownedIds, ) = getUserNFTs(user);
+        return ownedIds;
+    }
+
+    /**
+     * @dev Check if a user owns a specific NFT ID
+     * @param user The address to query
+     * @param tokenId The NFT ID to check
+     * @return owned True if user owns at least 1 of this NFT
+     * @return balance The exact balance of this NFT
+     */
+    function userOwnsNFT(address user, uint256 tokenId) 
+        public 
+        view 
+        returns (bool owned, uint256 balance) 
+    {
+        balance = balanceOf(user, tokenId);
+        owned = balance > 0;
+        return (owned, balance);
+    }
+
+    /**
+     * @dev Get user's balance for multiple NFT IDs at once
+     * @param user The address to query
+     * @param tokenIds Array of NFT IDs to check
+     * @return balances Array of balances for each NFT ID
+     */
+    function getUserBalances(address user, uint256[] memory tokenIds) 
+        public 
+        view 
+        returns (uint256[] memory balances) 
+    {
+        require(user != address(0), "Cannot query zero address");
+        
+        balances = new uint256[](tokenIds.length);
+        for (uint256 i = 0; i < tokenIds.length; i++) {
+            balances[i] = balanceOf(user, tokenIds[i]);
+        }
+        
+        return balances;
+    }
+
+    /**
+     * @dev Get total number of different NFT types a user owns
+     * @param user The address to query
+     * @return count Number of different NFT types owned
+     */
+    function getUserNFTTypeCount(address user) 
+        public 
+        view 
+        returns (uint256 count) 
+    {
+        for (uint256 i = MIN_CHARACTER_ID; i <= MAX_CHARACTER_ID; i++) {
+            if (balanceOf(user, i) > 0) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    /**
+     * @dev Get total number of NFTs a user owns (sum of all balances)
+     * @param user The address to query
+     * @return totalNFTs Total number of NFTs owned
+     */
+    function getUserTotalNFTCount(address user) 
+        public 
+        view 
+        returns (uint256 totalNFTs) 
+    {
+        for (uint256 i = MIN_CHARACTER_ID; i <= MAX_CHARACTER_ID; i++) {
+            totalNFTs += balanceOf(user, i);
+        }
+        return totalNFTs;
+    }
+
+    /**
      * @dev Gacha mint function that mints random character NFTs to a user
      * @param user The address to mint NFTs to
      * @param numberOfNFTs The number of NFTs to mint
