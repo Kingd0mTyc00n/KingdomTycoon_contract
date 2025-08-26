@@ -24,19 +24,15 @@ const config: HardhatUserConfig = {
     },
   },
   networks: {
-    seitestnet: {
+    sei_atlantic_2: {
       type: "http",
       chainType: "l1",
       url: "https://evm-rpc-testnet.sei-apis.com",
       accounts: process.env.SEI_PRIVATE_KEY ? [process.env.SEI_PRIVATE_KEY] : [],
       chainId: 1328,
-    },
-    seimainnet: {
-      type: "http",
-      chainType: "l1",
-      url: "https://evm-rpc.sei-apis.com",
-      accounts: process.env.SEI_PRIVATE_KEY ? [process.env.SEI_PRIVATE_KEY] : [],
-      chainId: 1329,
+      gas: 2100000,
+      gasPrice: 20000000000,
+      gasMultiplier: 2
     },
   },
  
