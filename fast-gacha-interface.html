@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Fast Gacha Mint Interface</title>
+    <script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js"></script>
+</head>
+<body>
+    <h1>🎲 Fast Gacha Mint</h1>
+    <div>
+        <label>Number of NFTs to mint:</label>
+        <input type="number" id="amount" value="1" min="1" max="10">
+        <button onclick="mintGacha()">Mint with Fast Gas</button>
+    </div>
+    <div id="status"></div>
+    <div id="results"></div>
+
+    <script>
+        const CONTRACT_ADDRESS = "0x3f28033374ecf16A90fDbc22ea8e2Bb6194671F7";
+        const ABI = [
+            "function publicGachaMint(uint256 numberOfNFTs) public payable returns (uint256[] memory)",
+            "function getUserNFTs(address user) public view returns (uint256[] memory, uint256[] memory)"
+        ];
+
+        async function mintGacha() {
+            const status = document.getElementById('status');
+            const results = document.getElementById('results');
+            
+            try {
+                status.innerHTML = "🔗 Connecting to wallet...";
+                
+                // Connect to MetaMask
+                if (!window.ethereum) {
+                    throw new Error("Please install MetaMask!");
+                }
+                
+                await window.ethereum.request({ method: 'eth_requestAccounts' });
+                const provider = new ethers.providers.Web3Provider(window.ethereum);
+                const signer = provider.getSigner();
+                const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+                
+                const amount = document.getElementById('amount').value;
+                
+                status.innerHTML = "⚡ Minting with fast gas settings...";
+                
+                // Use optimized gas settings (same as your Hardhat script)
+                const tx = await contract.publicGachaMint(amount, {
+                    gasPrice: ethers.utils.parseUnits("150", "gwei"), // Fast gas
+                    gasLimit: 500000 // High limit
+                });
+                
+                status.innerHTML = `📝 Transaction sent: ${tx.hash}<br>⏳ Waiting for confirmation...`;
+                
+                const receipt = await tx.wait();
+                
+                status.innerHTML = `✅ Success! Block: ${receipt.blockNumber}`;
+                
+                // Get user's NFTs
+                const userAddress = await signer.getAddress();
+                const [ownedIds, balances] = await contract.getUserNFTs(userAddress);
+                
+                results.innerHTML = `
+                    <h3>🎁 Your NFTs:</h3>
+                    <p>Owned IDs: ${ownedIds.map(id => id.toString()).join(', ')}</p>
+                    <p>Balances: ${balances.map(bal => bal.toString()).join(', ')}</p>
+                    <p>Gas Used: ${receipt.gasUsed.toString()}</p>
+                    <p>Cost: ${ethers.utils.formatEther(receipt.gasUsed.mul(tx.gasPrice))} SEI</p>
+                `;
+                
+            } catch (error) {
+                status.innerHTML = `❌ Error: ${error.message}`;
+                console.error(error);
+            }
+        }
+
+        // Check if connected to correct network
+        window.addEventListener('load', async () => {
+            if (window.ethereum) {
+                const provider = new ethers.providers.Web3Provider(window.ethereum);
+                const network = await provider.getNetwork();
+                if (network.chainId !== 1328) {
+                    document.getElementById('status').innerHTML = 
+                        "⚠️ Please switch to Sei Atlantic 2 testnet (Chain ID: 1328)";
+                }
+            }
+        });
+    </script>
+</body>
+</html>

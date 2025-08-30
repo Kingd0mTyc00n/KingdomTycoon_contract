@@ -184,7 +184,7 @@ contract Lord is ERC1155, Ownable, ERC1155Pausable, ERC1155Burnable, ERC1155Supp
         returns (uint256[] memory characterIds) 
     {
         require(user != address(0), "Cannot mint to zero address");
-        require(numberOfNFTs > 0 && numberOfNFTs <= 10, "Invalid number of NFTs (1-50)");
+        require(numberOfNFTs > 0 && numberOfNFTs <= 50, "Invalid number of NFTs (1-50)");
         
         characterIds = new uint256[](numberOfNFTs);
         uint256[] memory amounts = new uint256[](numberOfNFTs);
@@ -221,7 +221,7 @@ contract Lord is ERC1155, Ownable, ERC1155Pausable, ERC1155Burnable, ERC1155Supp
     }
 
     /**
-     * @dev Public gacha mint function that users can call directly (if you want to allow this)
+     * @dev Public gacha mint function that users can call directly
      * @param numberOfNFTs The number of NFTs to mint
      * @return characterIds Array of minted character IDs
      */
@@ -234,7 +234,23 @@ contract Lord is ERC1155, Ownable, ERC1155Pausable, ERC1155Burnable, ERC1155Supp
         // Add payment logic here if needed
         // require(msg.value >= numberOfNFTs * MINT_PRICE, "Insufficient payment");
         
-        return gachaMint(msg.sender, numberOfNFTs);
+        // Duplicate the gacha mint logic for public access
+        characterIds = new uint256[](numberOfNFTs);
+        uint256[] memory amounts = new uint256[](numberOfNFTs);
+        
+        // Generate random character IDs
+        for (uint256 i = 0; i < numberOfNFTs; i++) {
+            characterIds[i] = _generateRandomCharacterId();
+            amounts[i] = 1; // Mint 1 of each character
+        }
+        
+        // Mint all NFTs in a batch
+        _mintBatch(msg.sender, characterIds, amounts, "");
+        
+        // Emit event
+        emit GachaMint(msg.sender, characterIds, block.timestamp);
+        
+        return characterIds;
     }
 
     // The following functions are overrides required by Solidity.
